@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>好キーホルダー</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    :root {
+      --pink: #E07898;
+      --rose: #C85C7A;
+      --pink-pale: #F8C0D2;
+      --pink-light: #FBDDE8;
+      --pink-bg: #FDF0F4;
+      --text: #3A2030;
+      --text-muted: #C8A0B0;
+      --white: #ffffff;
+      --shadow: 0 2px 14px rgba(220,100,140,0.10);
+      --radius: 18px;
+    }
+
+    body {
+      font-family: -apple-system,'Hiragino Sans','Hiragino Kaku Gothic ProN','Yu Gothic UI',Meiryo,sans-serif;
+      background: var(--pink-bg);
+      color: var(--text);
+      min-height: 100vh; overflow-x: hidden;
+    }
+
+    /* ===== SCREENS ===== */
+    .screen { display: none; min-height: 100vh; padding: 20px 16px 40px; flex-direction: column; }
+    .screen.active { display: flex; animation: fadeUp 0.28s ease; }
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(10px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    /* ===== COMMON HEADER ===== */
+    .header { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+    .back-btn {
+      width:40px; height:40px; background:var(--white); border:none;
+      border-radius:12px; font-size:18px; cursor:pointer;
+      box-shadow:0 2px 8px rgba(0,0,0,0.07);
+      display:flex; align-items:center; justify-content:center;
+      flex-shrink:0; transition:transform 0.1s;
+    }
+    .back-btn:active { transform:scale(0.92); }
+    .header-title { font-size:18px; font-weight:800; }
+
+    /* ===== BUTTONS ===== */
+    .btn-primary {
+      background: var(--pink);
+      color:white; border:none; border-radius:50px; padding:16px;
+      font-size:17px; font-weight:800; cursor:pointer;
+      width:100%; max-width:300px; align-self:center;
+      box-shadow:0 4px 16px rgba(192,113,141,0.28);
+      transition:transform 0.1s, box-shadow 0.1s; letter-spacing:0.04em;
+    }
+    .btn-primary:active { transform:scale(0.96); box-shadow:0 2px 8px rgba(192,113,141,0.2); }
+    /* トップ画面のプライマリボタンは白ベース */
+    #screen-top .btn-primary {
+      background: rgba(255,255,255,0.95); color:var(--rose);
+      box-shadow:0 4px 16px rgba(0,0,0,0.12);
+    }
+    #screen-top .btn-primary:active { background:rgba(255,255,255,0.85); }
+
+    .btn-secondary {
+      background:var(--white); color:var(--pink);
+      border:2px solid var(--pink-pale); border-radius:50px; padding:14px;
+      font-size:15px; font-weight:700; cursor:pointer;
+      width:100%; max-width:300px; align-self:center;
+      transition:transform 0.1s, background 0.15s;
+    }
+    .btn-secondary:active { transform:scale(0.96); background:var(--pink-pale); }
+    /* トップ画面のセカンダリボタンは透過白 */
+    #screen-top .btn-secondary {
+      background:rgba(255,255,255,0.18); color:#fff;
+      border-color:rgba(255,255,255,0.50);
+    }
+    #screen-top .btn-secondary:active { background:rgba(255,255,255,0.30); }
+
+    .btn-ghost {
+      background:transparent; border:none; color:var(--text-muted);
+      font-size:14px; cursor:pointer; padding:10px;
+      width:100%; text-align:center;
+    }
+
+    /* ===== TOP ===== */
+    #screen-top {
+      justify-content:center; align-items:center; text-align:center;
+      position:relative; overflow:hidden;
+      background: #E8738E;
+    }
+
+    .floating-hearts { position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:1; }
+    .fheart { position:absolute; line-height:1; animation:floatUp linear infinite; opacity:0; }
+    @keyframes floatUp {
+      0%  { transform:translateY(110vh) rotate(-10deg); opacity:0; }
+      8%  { opacity:0.22; }
+      90% { opacity:0.08; }
+      100%{ transform:translateY(-80px) rotate(15deg); opacity:0; }
+    }
+
+    /* キューピッド2体コンテナ */
+    .top-cupids {
+      display:flex; align-items:center; justify-content:center;
+      width:100%; max-width:360px;
+      margin-bottom:0px; position:relative; z-index:2;
+    }
+    .top-cupid {
+      width:48%;
+      margin: 0 2%;
+      animation:floatGently 4s ease-in-out infinite;
+    }
+    /* 右キューピッド：ラッパーで常にflip固定、imgでfloatアニメ */
+    .top-cupid-flip-wrap {
+      width:48%; margin: 0 2%;
+      transform: scaleX(-1);
+      flex-shrink: 0;
+    }
+    .top-cupid-flip-wrap .top-cupid {
+      width: 100%;
+      animation-delay: 0.7s;
+    }
+    @keyframes floatGently {
+      0%,100%{ transform:translateY(0); }
+      50%    { transform:translateY(-8px); }
+    }
+
+    .top-title    { width:92%; max-width:400px; margin-bottom:6px; position:relative; z-index:2; display:block; }
+    .top-subtitle { font-size:13px; color:rgba(255,255,255,0.88); line-height:1.9; margin-bottom:24px; position:relative; z-index:2; }
+    .top-meta     { display:flex; gap:8px; justify-content:center; margin-bottom:28px; position:relative; z-index:2; }
+    .meta-chip    { background:rgba(255,255,255,0.22); border:1.5px solid rgba(255,255,255,0.40); border-radius:14px; padding:9px 12px; text-align:center; }
+    .meta-chip .label { font-size:10px; color:rgba(255,255,255,0.75); margin-bottom:2px; }
+    .meta-chip .val   { font-size:13px; font-weight:800; color:#fff; }
+    .top-buttons  { display:flex; flex-direction:column; gap:10px; width:100%; align-items:center; position:relative; z-index:2; }
+
+    /* ===== GAME ===== */
+    #screen-game { gap:0; }
+    .game-header  { display:flex; align-items:center; gap:10px; margin-bottom:20px; }
+    .game-header .back-btn { width:36px; height:36px; font-size:16px; }
+    .game-header-title { font-size:16px; font-weight:800; flex:1; }
+    .help-btn {
+      width:36px; height:36px; background:var(--white); border:none;
+      border-radius:12px; font-size:17px; cursor:pointer;
+      box-shadow:0 2px 8px rgba(0,0,0,0.07);
+      display:flex; align-items:center; justify-content:center; transition:transform 0.1s;
+    }
+    .help-btn:active { transform:scale(0.92); }
+
+    .round-bar {
+      background:var(--white); border-radius:14px; padding:14px 18px;
+      box-shadow:var(--shadow); display:flex; align-items:center;
+      justify-content:space-between; margin-bottom:14px;
+    }
+    .round-label-txt { font-size:13px; font-weight:700; color:var(--text-muted); }
+    .round-dots { display:flex; gap:6px; }
+    .rdot {
+      width:30px; height:30px; border-radius:50%; background:#EEEAEC;
+      color:#ccc; font-size:12px; font-weight:800;
+      display:flex; align-items:center; justify-content:center;
+      transition:all 0.2s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .rdot.done    { background:var(--pink-pale); color:var(--pink); }
+    .rdot.current { background:var(--pink); color:white; box-shadow:0 3px 10px rgba(192,113,141,0.30); transform:scale(1.15); }
+
+    .question-box {
+      background:var(--white); border-radius:var(--radius); padding:20px;
+      box-shadow:var(--shadow); min-height:164px;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; margin-bottom:14px;
+    }
+    .q-placeholder { font-size:13px; color:var(--text-muted); line-height:1.9; }
+    .q-choices { display:none; flex-direction:column; gap:8px; width:100%; }
+    .q-choice-btn {
+      background:var(--pink-bg); border:2px solid var(--pink-pale);
+      border-radius:14px; padding:12px 16px;
+      font-size:14px; font-weight:700; line-height:1.55; color:var(--text);
+      cursor:pointer; text-align:left; width:100%;
+      transition:transform 0.1s, background 0.12s, border-color 0.12s;
+    }
+    .q-choice-btn:active { transform:scale(0.97); background:var(--pink-pale); border-color:var(--pink); }
+    .q-text { display:none; font-size:22px; font-weight:900; line-height:1.5; }
+    .q-text.show { display:block; animation:popIn 0.32s cubic-bezier(0.34,1.56,0.64,1); }
+    @keyframes popIn {
+      0%  { transform:scale(0.78); opacity:0; }
+      100%{ transform:scale(1);    opacity:1; }
+    }
+
+    /* ゲームアクション */
+    .game-actions { display:flex; flex-direction:column; gap:10px; }
+
+    /* 初期状態：2ボタン横並び */
+    .action-row { display:flex; gap:10px; }
+    .btn-random {
+      flex:1; background: var(--pink);
+      color:white; border:none; border-radius:50px; padding:15px 10px;
+      font-size:15px; font-weight:800; cursor:pointer;
+      box-shadow:0 4px 14px rgba(192,113,141,0.26);
+      display:flex; align-items:center; justify-content:center; gap:6px;
+      transition:transform 0.1s; letter-spacing:0.03em;
+    }
+    .btn-random:active { transform:scale(0.96); }
+
+    .btn-list {
+      background:var(--white); color:var(--text);
+      border:2px solid var(--pink-pale); border-radius:50px;
+      padding:15px 14px; font-size:15px; font-weight:800; cursor:pointer;
+      display:flex; align-items:center; justify-content:center; gap:6px;
+      flex-shrink:0; transition:transform 0.1s, background 0.15s;
+    }
+    .btn-list:active { transform:scale(0.96); background:var(--pink-pale); }
+
+    /* 質問表示後：変更ボタン */
+    .btn-change {
+      background:var(--white); color:var(--pink);
+      border:2px solid var(--pink-pale); border-radius:50px;
+      padding:13px; font-size:14px; font-weight:700; cursor:pointer;
+      width:100%; display:none; align-items:center; justify-content:center; gap:6px;
+      transition:transform 0.1s, background 0.15s;
+    }
+    .btn-change.visible { display:flex; }
+    .btn-change:active { transform:scale(0.96); background:var(--pink-pale); }
+
+    .btn-next {
+      background: var(--pink);
+      color:white; border:none; border-radius:50px; padding:15px;
+      font-size:15px; font-weight:800; cursor:pointer; width:100%;
+      display:none; align-items:center; justify-content:center; gap:6px;
+      box-shadow:0 4px 14px rgba(192,113,141,0.26); transition:transform 0.1s;
+    }
+    .btn-next.visible { display:flex; }
+    .btn-next:active  { transform:scale(0.96); }
+
+    /* ===== HISTORY INLINE ===== */
+    .history-inline {
+      background:var(--white); border-radius:var(--radius);
+      padding:14px 16px; box-shadow:var(--shadow);
+      display:flex; flex-direction:column; gap:8px;
+      animation:fadeUp 0.25s ease;
+    }
+    .history-inline-title {
+      font-size:12px; font-weight:800; color:var(--text-muted);
+      letter-spacing:0.04em; margin-bottom:2px;
+    }
+    .history-list { display:flex; flex-direction:column; gap:6px; }
+    .history-item {
+      display:flex; align-items:flex-start; gap:10px;
+      background:var(--pink-bg); border-radius:10px; padding:9px 12px;
+    }
+    .history-badge {
+      background:var(--pink); color:white;
+      font-size:10px; font-weight:800;
+      border-radius:20px; padding:2px 7px;
+      flex-shrink:0; margin-top:2px;
+    }
+    .history-q { font-size:13px; font-weight:700; line-height:1.55; color:var(--text); }
+
+    /* ===== RESULT ===== */
+    #screen-result {
+      justify-content:center; align-items:center; text-align:center;
+      background:#FBF4F7;
+    }
+    .result-icon  { font-size:90px; margin-bottom:16px; animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1); }
+    .result-title { font-size:26px; font-weight:900; color:var(--rose); margin-bottom:10px; }
+    .result-desc  { font-size:14px; color:var(--text-muted); line-height:1.9; margin-bottom:32px; max-width:300px; }
+    .result-chips { display:flex; flex-direction:column; gap:10px; width:100%; max-width:320px; margin-bottom:32px; }
+    .result-chip  { background:var(--white); border-radius:14px; padding:14px 18px; display:flex; align-items:center; gap:14px; box-shadow:var(--shadow); text-align:left; }
+    .rc-icon { font-size:28px; flex-shrink:0; }
+    .rc-name { font-size:15px; font-weight:800; margin-bottom:2px; }
+    .rc-desc { font-size:12px; color:var(--text-muted); }
+    .result-btns { display:flex; flex-direction:column; gap:10px; width:100%; align-items:center; }
+
+    /* ===== RULES ===== */
+    .rules-intro {
+      background: var(--pink);
+      border-radius:var(--radius); padding:20px; color:white;
+      text-align:center; font-size:14px; line-height:1.9; margin-bottom:16px;
+    }
+    .rules-tabs { display:flex; gap:8px; margin-bottom:14px; }
+    .rtab {
+      flex:1; background:var(--white); border:2px solid var(--pink-pale);
+      border-radius:50px; padding:11px 6px; font-size:13px; font-weight:800;
+      color:var(--text-muted); cursor:pointer; transition:all 0.15s;
+    }
+    .rtab.active { background:var(--pink); color:white; border-color:var(--pink); box-shadow:0 3px 10px rgba(220,100,140,0.22); }
+    .rules-section { display:none; }
+    .rules-section.active { display:block; }
+    .rule-card { background:var(--white); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow); margin-bottom:12px; display:flex; gap:14px; }
+    .rule-num {
+      background: var(--pink); color:white;
+      border-radius:50%; width:38px; height:38px; flex-shrink:0;
+      font-size:16px; font-weight:900; display:flex; align-items:center; justify-content:center;
+    }
+    .rule-body { flex:1; }
+    .rule-text { font-size:14px; line-height:1.9; }
+    .score-row  { display:flex; gap:6px; margin-top:12px; flex-wrap:wrap; }
+    .score-chip { flex:1; min-width:80px; background:var(--pink-bg); border-radius:12px; padding:10px 6px; text-align:center; }
+    .sc-val     { font-size:13px; font-weight:900; color:var(--rose); }
+    .sc-label   { font-size:11px; color:var(--text-muted); margin-top:4px; line-height:1.4; }
+    .outcome-list { margin-top:12px; display:flex; flex-direction:column; gap:8px; }
+    .outcome-item { background:var(--pink-bg); border-radius:12px; padding:10px 14px; display:flex; align-items:center; gap:10px; }
+    .oi-icon { font-size:22px; }
+    .oi-name { font-size:13px; font-weight:800; margin-bottom:1px; }
+    .oi-desc { font-size:12px; color:var(--text-muted); }
+    .rules-start-area { margin-top:16px; display:flex; flex-direction:column; align-items:center; }
+
+    /* ===== QUESTION LIST（カテゴリ一覧）===== */
+    #screen-qlist { padding-bottom:40px; }
+    .qlist-total  { font-size:12px; color:var(--text-muted); margin-left:auto; }
+
+    /* カテゴリカード グリッド */
+    .cat-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-top:4px; }
+    .cat-card {
+      background:var(--white); border-radius:var(--radius);
+      padding:22px 12px; box-shadow:var(--shadow);
+      cursor:pointer; display:flex; flex-direction:column;
+      align-items:center; text-align:center; gap:8px;
+      border:2px solid transparent;
+      transition:transform 0.12s, border-color 0.15s, box-shadow 0.15s;
+    }
+    .cat-card:active { transform:scale(0.95); border-color:var(--pink-pale); box-shadow:0 2px 10px rgba(180,120,150,0.18); }
+    .cat-emoji { font-size:34px; }
+    .cat-name  { font-size:13px; font-weight:800; line-height:1.4; color:var(--text); }
+    .cat-count { font-size:11px; font-weight:700; color:var(--pink); background:var(--pink-bg); border-radius:20px; padding:2px 10px; }
+
+    /* ===== QUESTION CAT（カテゴリ内質問一覧）===== */
+    #screen-qcat { padding-bottom:40px; }
+    .qcat-meta { font-size:12px; color:var(--text-muted); margin-left:auto; }
+    .qlist-item {
+      background:var(--white); border-radius:12px;
+      padding:13px 16px; margin-bottom:8px;
+      cursor:pointer; display:flex; align-items:center;
+      justify-content:space-between; gap:10px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.04);
+      border:2px solid transparent;
+      transition:border-color 0.15s, transform 0.1s;
+      font-size:14px; line-height:1.5; font-weight:600;
+    }
+    .qlist-item:active { transform:scale(0.98); border-color:var(--pink-pale); }
+    .qlist-chevron { color:var(--pink-pale); font-size:18px; flex-shrink:0; font-weight:900; }
+
+    .spacer { flex:1; min-height:16px; }
+  </style>
+</head>
+<body>
+
+<!-- ==================== TOP ==================== -->
+<div class="screen active" id="screen-top">
+  <div class="floating-hearts" id="fhearts"></div>
+
+  <!-- キューピッド2体（向かい合わせ） -->
+  <div class="top-cupids">
+    <img class="top-cupid" src="cupid-white.png" alt="キューピッド">
+    <!-- 右はラッパーでflipを固定し、img側でfloatアニメのみ -->
+    <div class="top-cupid-flip-wrap">
+      <img class="top-cupid" src="cupid-white.png" alt="キューピッド" style="margin:0;">
+    </div>
+  </div>
+
+  <img class="top-title" src="title-white.png" alt="好キーホルダー">
+  <div class="top-subtitle">
+    2人をくっつける<br>
+    キーホルダー型の相性診断ゲーム
+  </div>
+  <div class="top-meta">
+    <div class="meta-chip"><div class="label">プレイ人数</div><div class="val">2人〜</div></div>
+    <div class="meta-chip"><div class="label">プレイ時間</div><div class="val">3分〜</div></div>
+    <div class="meta-chip"><div class="label">対象年齢</div><div class="val">10歳〜</div></div>
+  </div>
+  <div class="top-buttons">
+    <button class="btn-primary" onclick="startGame()">ゲームをはじめる</button>
+    <button class="btn-secondary" onclick="openRules('screen-top')">遊び方を見る</button>
+  </div>
+</div>
+
+<!-- ==================== GAME ==================== -->
+<div class="screen" id="screen-game">
+  <div class="game-header">
+    <button class="back-btn" onclick="show('screen-top')">←</button>
+    <span class="game-header-title">ゲーム中</span>
+    <button class="help-btn" onclick="openRules('screen-game')">？</button>
+  </div>
+
+  <div class="round-bar">
+    <span class="round-label-txt">質問数（最大5回）</span>
+    <div class="round-dots" id="round-dots">
+      <div class="rdot current" data-r="1">1</div>
+      <div class="rdot" data-r="2">2</div>
+      <div class="rdot" data-r="3">3</div>
+      <div class="rdot" data-r="4">4</div>
+      <div class="rdot" data-r="5">5</div>
+    </div>
+  </div>
+
+  <div class="question-box">
+    <div class="q-placeholder" id="q-placeholder">
+      「天の声をきく」を押して表示するか、<br>自分たちで自由に質問してみよう！
+    </div>
+    <div class="q-choices" id="q-choices"></div>
+    <div class="q-text" id="q-text"></div>
+  </div>
+
+  <div class="game-actions">
+    <!-- 初期状態：ランダム選択 ＋ 一覧から選ぶ -->
+    <div class="action-row" id="action-initial">
+      <button class="btn-random" onclick="doRandom()">👼 天の声をきく</button>
+      <button class="btn-list"   onclick="openQList()">📋 一覧</button>
+    </div>
+    <!-- 質問表示後 -->
+    <button class="btn-change" id="btn-change" onclick="changeQuestion()">🔄 別の質問にする</button>
+    <button class="btn-next"   id="btn-next"   onclick="nextRound()">次の質問へ →</button>
+    <!-- インライン履歴 -->
+    <div class="history-inline" id="history-inline" style="display:none;">
+      <div class="history-inline-title">📜 これまでの質問</div>
+      <div class="history-list" id="history-list"></div>
+    </div>
+    <button class="btn-ghost"  onclick="show('screen-result')">ゲームを終わる</button>
+  </div>
+</div>
+
+<!-- ==================== RESULT ==================== -->
+<div class="screen" id="screen-result">
+  <div class="result-icon">🎊</div>
+  <div class="result-title">どうだった？</div>
+  <div class="result-desc">指先はどこで止まったかな？<br>3つの結果から確認してみよう！</div>
+  <div class="result-chips">
+    <div class="result-chip">
+      <div class="rc-icon">💗💗</div>
+      <div><div class="rc-name">相性ばっちり！</div><div class="rc-desc">中央のハートマークでぴったり重なった</div></div>
+    </div>
+    <div class="result-chip">
+      <div class="rc-icon">✋🤝</div>
+      <div><div class="rc-name">相性はまずまず！</div><div class="rc-desc">それ以外の場所で指が触れ合った</div></div>
+    </div>
+    <div class="result-chip">
+      <div class="rc-icon">😅</div>
+      <div><div class="rc-name">相性はイマイチ…</div><div class="rc-desc">指が触れ合わなかった</div></div>
+    </div>
+  </div>
+  <div class="result-btns">
+    <button class="btn-primary"   onclick="startGame()">もう一度プレイ</button>
+    <button class="btn-secondary" onclick="show('screen-top')">トップに戻る</button>
+  </div>
+</div>
+
+<!-- ==================== RULES ==================== -->
+<div class="screen" id="screen-rules">
+  <div class="header">
+    <button class="back-btn" onclick="rulesBack()">←</button>
+    <span class="header-title">遊び方</span>
+  </div>
+  <div class="rules-intro">
+    「好キーホルダー」は、2人をくっつける<br>
+    キーホルダー型の相性診断ゲーム。<br>
+    2人の「好き」や「価値観」を言い当てて、<br>
+    <strong>指先がぴったり重なり合えば大成功！</strong>
+  </div>
+
+  <!-- タブ切り替え -->
+  <div class="rules-tabs">
+    <button class="rtab active" onclick="switchRulesTab('cupid', this)">💘 キューピッド<br><small>3人以上</small></button>
+    <button class="rtab" onclick="switchRulesTab('two', this)">💑 2人プレイ<br><small>2人</small></button>
+  </div>
+
+  <!-- キューピッドプレイ -->
+  <div class="rules-section active" id="rules-cupid">
+    <div class="rule-card">
+      <div class="rule-num">①</div>
+      <div class="rule-body"><div class="rule-text">相性を確かめ合いたいプレイヤーを2人選び、2人の間に好キーホルダーを置きます。</div></div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-num">②</div>
+      <div class="rule-body"><div class="rule-text">プレイヤーの2人は、お互いの位置から近い端のハートマークに指を置き、目を閉じます。</div></div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-num">③</div>
+      <div class="rule-body">
+        <div class="rule-text">プレイヤー以外の人は恋のキューピッドとなって、2人に共通する「好きそうなもの」や「価値観」を想像して伝えます。<br><br>例：「辛い食べ物が好きだ」「犬より猫派だ」「幽霊を信じている」など<br><br>💡 思いつかない場合はアプリの「天の声をきく」を活用！</div>
+      </div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-num">④</div>
+      <div class="rule-body">
+        <div class="rule-text">2人のプレイヤーは、キューピッドの声に対して以下のようにアクションします。</div>
+        <div class="score-row">
+          <div class="score-chip"><div class="sc-val">1つ先へ</div><div class="sc-label">好き／Yes 😍</div></div>
+          <div class="score-chip"><div class="sc-val">そのまま</div><div class="sc-label">普通／どちらでも 😐</div></div>
+          <div class="score-chip"><div class="sc-val">1つ戻る</div><div class="sc-label">嫌い／No 🙅</div></div>
+        </div>
+        <div class="rule-text" style="margin-top:10px;font-size:12px;color:var(--text-muted)">※ 端のハートにいる場合はその場にとどまる</div>
+      </div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-num">⑤</div>
+      <div class="rule-body">
+        <div class="rule-text">合計5回まで問いかけることができます。結果を確認！</div>
+        <div class="outcome-list">
+          <div class="outcome-item"><div class="oi-icon">💗💗</div><div><div class="oi-name">相性ばっちり！</div><div class="oi-desc">中央のハートでぴったり重なった → キューピッド役は大成功</div></div></div>
+          <div class="outcome-item"><div class="oi-icon">🤝</div><div><div class="oi-name">相性はまずまず</div><div class="oi-desc">それ以外の場所で指が触れ合った</div></div></div>
+          <div class="outcome-item"><div class="oi-icon">😅</div><div><div class="oi-name">相性はイマイチ…</div><div class="oi-desc">指が触れ合わなかった</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2人プレイ -->
+  <div class="rules-section" id="rules-two">
+    <div class="rule-card">
+      <div class="rule-num">①</div>
+      <div class="rule-body"><div class="rule-text">プレイヤーの間に好キーホルダーを置きます。</div></div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-num">②</div>
+      <div class="rule-body"><div class="rule-text">プレイヤーの2人は、お互いの位置から近い端のハートマークに指を置き、目を閉じます。</div></div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-num">③</div>
+      <div class="rule-body">
+        <div class="rule-text">プレイヤーは交互に相手の「好きそうなもの」や「大切にしている価値観」を言い合います。<br><br>例：「辛い食べ物が好きだ」「犬より猫派だ」「幽霊を信じている」など</div>
+      </div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-num">④</div>
+      <div class="rule-body">
+        <div class="rule-text">質問されたプレイヤーは以下のようにアクションします。</div>
+        <div class="score-row">
+          <div class="score-chip"><div class="sc-val">1つ先へ</div><div class="sc-label">好き／Yes 😍</div></div>
+          <div class="score-chip"><div class="sc-val">そのまま</div><div class="sc-label">嫌い／普通 😐</div></div>
+          <div class="score-chip"><div class="sc-val">2つ先へ</div><div class="sc-label">大好き！💖<br><small>一度限り</small></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-num">⑤</div>
+      <div class="rule-body">
+        <div class="rule-text">お互いに3回ずつ質問をすることができます。結果を確認！</div>
+        <div class="outcome-list">
+          <div class="outcome-item"><div class="oi-icon">💗💗</div><div><div class="oi-name">相性ばっちり！</div><div class="oi-desc">中央のハートでぴったり重なった</div></div></div>
+          <div class="outcome-item"><div class="oi-icon">😅</div><div><div class="oi-name">相性はイマイチ…</div><div class="oi-desc">指が触れ合わなかった</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rules-start-area">
+    <button class="btn-primary" onclick="rulesBack()">さあ、はじめよう！</button>
+  </div>
+</div>
+
+<!-- ==================== QUESTION LIST（カテゴリ選択）==================== -->
+<div class="screen" id="screen-qlist">
+  <div class="header">
+    <button class="back-btn" onclick="show('screen-game')">←</button>
+    <span class="header-title">質問カテゴリ</span>
+    <span class="qlist-total" id="qlist-total"></span>
+  </div>
+  <div class="cat-grid" id="cat-grid"></div>
+</div>
+
+<!-- ==================== QUESTION CAT（カテゴリ内一覧）==================== -->
+<div class="screen" id="screen-qcat">
+  <div class="header">
+    <button class="back-btn" onclick="show('screen-qlist')">←</button>
+    <span class="header-title" id="qcat-title"></span>
+    <span class="qcat-meta" id="qcat-meta"></span>
+  </div>
+  <div id="qcat-content"></div>
+</div>
+
+<!-- ==================== SCRIPT ==================== -->
+<script>
+/* ── 質問データ（カテゴリ付き）── */
+const QUESTIONS = [
+  /* 食べ物・飲み物 */
+  { cat:'食べ物・飲み物', q:'スパイスが効いた料理が好きだ' },
+  { cat:'食べ物・飲み物', q:'甘いものよりしょっぱいものが好きだ' },
+  { cat:'食べ物・飲み物', q:'洋食より和食が好きだ' },
+  { cat:'食べ物・飲み物', q:'コーヒーより紅茶が好きだ' },
+  { cat:'食べ物・飲み物', q:'辛い食べ物が好きだ' },
+  { cat:'食べ物・飲み物', q:'発酵食品（納豆・味噌・チーズなど）が好きだ' },
+  { cat:'食べ物・飲み物', q:'個性的な香りのハーブや調味料が好きだ' },
+  { cat:'食べ物・飲み物', q:'チョコレートやスイーツ全般が好きだ' },
+  { cat:'食べ物・飲み物', q:'魚より肉料理が好きだ' },
+  { cat:'食べ物・飲み物', q:'炭酸飲料が好きだ' },
+  { cat:'食べ物・飲み物', q:'お酒が好きだ' },
+  { cat:'食べ物・飲み物', q:'海鮮料理が好きだ' },
+  { cat:'食べ物・飲み物', q:'自炊より外食派だ' },
+  { cat:'食べ物・飲み物', q:'チェーン店より個人経営の飲食店が好きだ' },
+  { cat:'食べ物・飲み物', q:'食後にデザートを食べるのが好きだ' },
+  { cat:'食べ物・飲み物', q:'食事はひとりより誰かと食べるほうが好きだ' },
+  { cat:'食べ物・飲み物', q:'揚げ物料理が好きだ' },
+  { cat:'食べ物・飲み物', q:'エスニック料理が好きだ' },
+  { cat:'食べ物・飲み物', q:'中華料理が好きだ' },
+  { cat:'食べ物・飲み物', q:'〆に食べるラーメンが好きだ' },
+
+  /* 生物・自然 */
+  { cat:'生物・自然', q:'犬より猫が好きだ' },
+  { cat:'生物・自然', q:'大型動物より小動物が好きだ' },
+  { cat:'生物・自然', q:'海の生き物より陸の動物が好きだ' },
+  { cat:'生物・自然', q:'動物園より水族館が好きだ' },
+  { cat:'生物・自然', q:'ペットと暮らすことが好きだ' },
+  { cat:'生物・自然', q:'植物を育てることが好きだ' },
+  { cat:'生物・自然', q:'山より海のほうが好きだ' },
+  { cat:'生物・自然', q:'公園で過ごすのが好きだ' },
+  { cat:'生物・自然', q:'爬虫類や虫などの珍しいペットも好きだ' },
+  { cat:'生物・自然', q:'夏より冬のほうが好きだ' },
+
+  /* 音楽 */
+  { cat:'音楽', q:'邦楽より洋楽が好きだ' },
+  { cat:'音楽', q:'アイドル系の音楽が好きだ' },
+  { cat:'音楽', q:'バンドやロック系の音楽が好きだ' },
+  { cat:'音楽', q:'ヒップホップやR&B系の音楽が好きだ' },
+  { cat:'音楽', q:'ライブ・コンサートに行くことが好きだ' },
+  { cat:'音楽', q:'カラオケが好きだ' },
+  { cat:'音楽', q:'歌詞より曲のサウンドを重視するほうだ' },
+  { cat:'音楽', q:'プレイリストをこだわって作ることが好きだ' },
+  { cat:'音楽', q:'音楽をBGMとしてかけながら過ごすのが好きだ' },
+  { cat:'音楽', q:'新曲を追うより昔の名曲を聴き返すほうが好きだ' },
+
+  /* 映像・書籍 */
+  { cat:'映像・書籍', q:'ホラー・サスペンス系の作品が好きだ' },
+  { cat:'映像・書籍', q:'ラブストーリー系の作品が好きだ' },
+  { cat:'映像・書籍', q:'アクション系の作品が好きだ' },
+  { cat:'映像・書籍', q:'ファンタジー・異世界系の作品が好きだ' },
+  { cat:'映像・書籍', q:'日常・ほのぼの・コメディ系の作品が好きだ' },
+  { cat:'映像・書籍', q:'アニメ系の作品が好きだ' },
+  { cat:'映像・書籍', q:'ドキュメンタリー・ノンフィクション系の作品が好きだ' },
+  { cat:'映像・書籍', q:'映画は映画館で観るほうが好きだ' },
+  { cat:'映像・書籍', q:'邦画より洋画が好きだ' },
+  { cat:'映像・書籍', q:'字幕より吹き替え派だ' },
+  { cat:'映像・書籍', q:'作品を観てに泣くことがよくある' },
+  { cat:'映像・書籍', q:'映画は一人より誰かと一緒に観るほうが好きだ' },
+  { cat:'映像・書籍', q:'漫画はアプリより紙派だ' },
+  { cat:'映像・書籍', q:'週刊連載より完結済みを一気読みするほうが好きだ' },
+  { cat:'映像・書籍', q:'週に1回は作品に触れたいと思っている' },
+
+  /* 場所・旅行 */
+  { cat:'場所・旅行', q:'都会より田舎が好きだ' },
+  { cat:'場所・旅行', q:'国内旅行より海外旅行が好きだ' },
+  { cat:'場所・旅行', q:'旅行は計画的より行き当たりばったりが好きだ' },
+  { cat:'場所・旅行', q:'ひとり旅が好きだ' },
+  { cat:'場所・旅行', q:'キャンプやアウトドアが好きだ' },
+  { cat:'場所・旅行', q:'温泉・サウナが好きだ' },
+  { cat:'場所・旅行', q:'古い街並みや歴史ある場所が好きだ' },
+  { cat:'場所・旅行', q:'アミューズメントパークや遊園地が好きだ' },
+  { cat:'場所・旅行', q:'美術館・博物館が好きだ' },
+  { cat:'場所・旅行', q:'観光地より地元の穴場スポットが好きだ' },
+
+  /* スポーツ・運動 */
+  { cat:'スポーツ・運動', q:'球技系のスポーツが好きだ' },
+  { cat:'スポーツ・運動', q:'ウィンタースポーツが好きだ' },
+  { cat:'スポーツ・運動', q:'格闘技・武道系のスポーツが好きだ' },
+  { cat:'スポーツ・運動', q:'ストレッチやヨガのような静かな運動が好きだ' },
+  { cat:'スポーツ・運動', q:'ランニングや散歩が好きだ' },
+  { cat:'スポーツ・運動', q:'個人競技より団体競技が好きだ' },
+  { cat:'スポーツ・運動', q:'スポーツは観るより実際にプレイしたい派だ' },
+  { cat:'スポーツ・運動', q:'毎日体を動かさないと気が済まないほうだ' },
+  { cat:'スポーツ・運動', q:'野球よりもサッカー派だ' },
+  { cat:'スポーツ・運動', q:'スポーツは一人で観るより大勢で観たい派だ' },
+
+  /* 遊び・エンタメ */
+  { cat:'遊び・エンタメ', q:'ボードゲームやカードゲームが好きだ' },
+  { cat:'遊び・エンタメ', q:'重ゲーよりもサクッと遊べるゲームのほうが好きだ' },
+  { cat:'遊び・エンタメ', q:'謎解き・脱出ゲームが好きだ' },
+  { cat:'遊び・エンタメ', q:'クイズや知識系のゲームが好きだ' },
+  { cat:'遊び・エンタメ', q:'テレビゲームが好きだ' },
+  { cat:'遊び・エンタメ', q:'ダーツやビリヤードなどのバーゲームが好きだ' },
+  { cat:'遊び・エンタメ', q:'オンラインより対面で遊ぶゲームが好きだ' },
+  { cat:'遊び・エンタメ', q:'対戦型のゲームが好きだ' },
+  { cat:'遊び・エンタメ', q:'マーダーミステリーは犯人役のほうが得意だ' },
+  { cat:'遊び・エンタメ', q:'絵を描いたり創作活動をするのが好きだ' },
+
+  /* ライフスタイル */
+  { cat:'ライフスタイル', q:'朝より夜のほうが活動的だ' },
+  { cat:'ライフスタイル', q:'インドアよりアウトドア派だ' },
+  { cat:'ライフスタイル', q:'計画はしっかり立てないと不安になるほうだ' },
+  { cat:'ライフスタイル', q:'キレイ好きだ' },
+  { cat:'ライフスタイル', q:'にぎやかな場所より静かな場所が好きだ' },
+  { cat:'ライフスタイル', q:'SNSより直接会って話すほうが好きだ' },
+  { cat:'ライフスタイル', q:'本はデジタルより紙で読むほうが好きだ' },
+  { cat:'ライフスタイル', q:'ひとりの時間より誰かといる時間が好きだ' },
+  { cat:'ライフスタイル', q:'流行より自分のこだわりを優先するほうだ' },
+  { cat:'ライフスタイル', q:'プレゼントは物より体験のほうが嬉しい' },
+  { cat:'ライフスタイル', q:'週末は外に出るよりのんびり家で過ごしたい' },
+  { cat:'ライフスタイル', q:'新しいことに挑戦するのが好きだ' },
+  { cat:'ライフスタイル', q:'感情は素直に表現するほうだ' },
+  { cat:'ライフスタイル', q:'人に頼るより自分でこなすほうだ' },
+  { cat:'ライフスタイル', q:'シンプルなライフスタイルが好きだ' },
+  { cat:'ライフスタイル', q:'勝負事は結果より過程を大切にするほうだ' },
+  { cat:'ライフスタイル', q:'工作やDIYが好きだ' },
+  { cat:'ライフスタイル', q:'日記や手帳をつけるのが好きだ' },
+  { cat:'ライフスタイル', q:'贈り物を選ぶときはじっくり時間をかけるほうだ' },
+  { cat:'ライフスタイル', q:'こだわりの文具やガジェットを集めるのが好きだ' },
+
+  /* 恋愛 */
+  { cat:'恋愛', q:'自分から告白するほうだ' },
+  { cat:'恋愛', q:'一目惚れをしやすいほうだ' },
+  { cat:'恋愛', q:'遠距離恋愛も頑張れるほうだ' },
+  { cat:'恋愛', q:'愛されるより愛したい' },
+  { cat:'恋愛', q:'デートは計画してもらうより自分で考えるほうが好きだ' },
+  { cat:'恋愛', q:'記念日はしっかりお祝いするタイプだ' },
+  { cat:'恋愛', q:'スキンシップが多いほうが好きだ' },
+  { cat:'恋愛', q:'連絡はマメに取り合いたい' },
+  { cat:'恋愛', q:'恋人が自分以外の人と会っていると嫉妬するほうだ' },
+  { cat:'恋愛', q:'年上のほうが好きだ' },
+  { cat:'恋愛', q:'外見より内面を重視するほうだ' },
+  { cat:'恋愛', q:'同じ趣味を持つ相手と付き合いたい' },
+  { cat:'恋愛', q:'ドキドキよりも安心感のある恋愛が好きだ' },
+  { cat:'恋愛', q:'好きな人にはまっすぐ気持ちを伝えるほうだ' },
+  { cat:'恋愛', q:'ふたりで家でのんびりするデートが好きだ' },
+  { cat:'恋愛', q:'一度付き合ったら長続きするほうだ' },
+  { cat:'恋愛', q:'付き合っても一人の時間を大切にしたい' },
+  { cat:'恋愛', q:'束縛されるより自由な関係が好きだ' },
+  { cat:'恋愛', q:'恋人には手料理を振る舞いたい' },
+  { cat:'恋愛', q:'恋人には友達のような気楽さも求めたい' },
+  { cat:'恋愛', q:'恋愛は勢いより慎重に進めるほうが好きだ' },
+  { cat:'恋愛', q:'誕生日や記念日はサプライズ演出が好きだ' },
+  { cat:'恋愛', q:'価値観が近い相手より刺激をくれる相手が好きだ' },
+  { cat:'恋愛', q:'甘える側より甘えさせてあげたい' },
+  { cat:'恋愛', q:'喧嘩したらすぐ仲直りできるほうだ' },
+  { cat:'恋愛', q:'相手の全てを知りたいタイプだ' },
+  { cat:'恋愛', q:'仕事よりも恋愛のほうが大事だ' },
+  { cat:'恋愛', q:'相手の友人や家族とも仲良くしたい' },
+  { cat:'恋愛', q:'好きな人の前では素の自分を出せるほうだ' },
+  { cat:'恋愛', q:'付き合うなら将来を考えながら付き合いたい' },
+  { cat:'恋愛', q:'恋愛は友達から始まるパターンが多い' },
+  { cat:'恋愛', q:'恋人へのプレゼントは実用的なものより特別感のあるものを送りたい' },
+  { cat:'恋愛', q:'好きになったら全力でアプローチするタイプだ' },
+  { cat:'恋愛', q:'恋人には正直に何でも話せる関係でありたい' },
+  { cat:'恋愛', q:'片思い期間のドキドキ感が好きだ' },
+
+  /* 想像・ユニーク */
+  { cat:'想像・ユニーク', q:'タイムマシンがあるなら未来より過去に行きたい' },
+  { cat:'想像・ユニーク', q:'魔法が使えるなら攻撃より回復系の魔法を使いたい' },
+  { cat:'想像・ユニーク', q:'空を飛ぶ能力より瞬間移動できる能力がほしい' },
+  { cat:'想像・ユニーク', q:'無人島に1つだけ持っていくなら食料より娯楽品だ' },
+  { cat:'想像・ユニーク', q:'宇宙人と友達になれるならなりたいと思う' },
+  { cat:'想像・ユニーク', q:'異世界に転生するなら魔法使いより剣士が好きだ' },
+  { cat:'想像・ユニーク', q:'過去に戻りたいと思う' },
+  { cat:'想像・ユニーク', q:'映画の登場人物になれるなら悪役より正義の味方になりたい' },
+  { cat:'想像・ユニーク', q:'生まれ変わるなら同じ国より違う国に生まれたい' },
+  { cat:'想像・ユニーク', q:'好きなアニメや映画の世界に入れるならずっとそこにいたい' },
+
+  /* 人間関係・性格 */
+  { cat:'人間関係・性格', q:'大勢でわいわい過ごすより少人数で深く話すほうが好きだ' },
+  { cat:'人間関係・性格', q:'自分の意見をはっきり言うほうだ' },
+  { cat:'人間関係・性格', q:'リーダー役よりサポート役のほうが向いている' },
+  { cat:'人間関係・性格', q:'初対面の人ともすぐに打ち解けられるほうだ' },
+  { cat:'人間関係・性格', q:'大人数より少人数で過ごすほうが好きだ' },
+  { cat:'人間関係・性格', q:'誰かのために動くのが好きだ' },
+  { cat:'人間関係・性格', q:'頼られるより頼るほうが多い' },
+  { cat:'人間関係・性格', q:'自分のことをオープンに話すほうだ' },
+  { cat:'人間関係・性格', q:'失敗は引きずるタイプだ' },
+  { cat:'人間関係・性格', q:'直感より論理的に考えるほうだ' },
+  { cat:'人間関係・性格', q:'チームより個人で動くほうが好きだ' },
+  { cat:'人間関係・性格', q:'人前に立つのが好きだ' },
+  { cat:'人間関係・性格', q:'言葉より行動で示すタイプだ' },
+  { cat:'人間関係・性格', q:'自分が話すより相手の話を聞くほうが好きだ' },
+  { cat:'人間関係・性格', q:'約束の時間より早めに着くほうだ' },
+];
+
+/* ── State ── */
+let round = 1;
+let usedIdx = [];
+let rulesFrom = 'screen-top';
+
+/* ── 画面遷移 ── */
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+function openRules(from) { rulesFrom = from; show('screen-rules'); }
+function rulesBack()     { show(rulesFrom); }
+function switchRulesTab(id, btn) {
+  document.querySelectorAll('.rtab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.rules-section').forEach(s => s.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('rules-' + id).classList.add('active');
+}
+
+/* ── ゲーム開始 ── */
+let questionHistory = [];
+
+function startGame() {
+  round = 1;
+  usedIdx = [];
+  questionHistory = [];
+  document.getElementById('history-inline').style.display = 'none';
+  resetQuestionBox();
+  updateDots();
+  show('screen-game');
+}
+
+function updateDots() {
+  document.querySelectorAll('.rdot').forEach(d => {
+    const r = +d.dataset.r;
+    d.className = 'rdot';
+    if      (r < round)  d.classList.add('done');
+    else if (r === round) d.classList.add('current');
+  });
+}
+
+function resetQuestionBox() {
+  document.getElementById('q-placeholder').style.display = 'block';
+  document.getElementById('q-choices').style.display = 'none';
+  document.getElementById('q-choices').innerHTML = '';
+  const qt = document.getElementById('q-text');
+  qt.className = 'q-text';
+  qt.textContent = '';
+
+  // 初期ボタン表示
+  document.getElementById('action-initial').style.display = 'flex';
+  document.getElementById('btn-change').classList.remove('visible');
+  const bn = document.getElementById('btn-next');
+  bn.classList.remove('visible');
+  bn.textContent = round < 5 ? '次の質問へ →' : '結果を確認する →';
+}
+
+/* ── 質問を表示 ── */
+function showQuestion(text) {
+  document.getElementById('q-placeholder').style.display = 'none';
+  document.getElementById('q-choices').style.display = 'none';
+  const qt = document.getElementById('q-text');
+  qt.className = 'q-text';
+  void qt.offsetWidth; // アニメーションリセット
+  qt.classList.add('show');
+  qt.textContent = text;
+
+  // 履歴に記録（同じラウンドは上書き）
+  questionHistory[round - 1] = { round, q: text };
+  renderHistory();
+
+  document.getElementById('action-initial').style.display = 'none';
+  document.getElementById('btn-change').classList.add('visible');
+  const bn = document.getElementById('btn-next');
+  bn.classList.add('visible');
+  bn.textContent = round < 5 ? '次の質問へ →' : '結果を確認する →';
+}
+
+/* ── 履歴インライン描画 ── */
+function renderHistory() {
+  const done = questionHistory.filter(Boolean);
+  const el = document.getElementById('history-inline');
+  if (done.length === 0) { el.style.display = 'none'; return; }
+  document.getElementById('history-list').innerHTML = done.map(({ round: r, q }) =>
+    `<div class="history-item">
+      <span class="history-badge">Q${r}</span>
+      <span class="history-q">${q}</span>
+    </div>`
+  ).join('');
+  el.style.display = 'flex';
+}
+
+/* ── 3択をランダムで選んで表示 ── */
+function pickThree() {
+  let pool = QUESTIONS.map((_,i) => i).filter(i => !usedIdx.includes(i));
+  if (pool.length < 3) { usedIdx = []; pool = QUESTIONS.map((_,i) => i); }
+  const chosen = [];
+  const copy = [...pool];
+  while (chosen.length < 3) {
+    const r = Math.floor(Math.random() * copy.length);
+    const idx = copy.splice(r, 1)[0];
+    chosen.push(idx);
+    usedIdx.push(idx); // 表示した3問を使用済みにしておく
+  }
+  return chosen;
+}
+
+function showChoices(indices) {
+  document.getElementById('q-placeholder').style.display = 'none';
+  const qt = document.getElementById('q-text');
+  qt.className = 'q-text';
+  qt.textContent = '';
+
+  const el = document.getElementById('q-choices');
+  el.innerHTML = indices.map(i =>
+    `<button class="q-choice-btn" onclick="selectChoice(${i})">${QUESTIONS[i].q}</button>`
+  ).join('');
+  el.style.display = 'flex';
+
+  document.getElementById('action-initial').style.display = 'none';
+  document.getElementById('btn-change').classList.add('visible');
+  document.getElementById('btn-next').classList.remove('visible');
+}
+
+function selectChoice(idx) {
+  showQuestion(QUESTIONS[idx].q);
+}
+
+function doRandom() {
+  showChoices(pickThree());
+}
+
+/* 別の質問にする → 3択を出し直す */
+function changeQuestion() {
+  showChoices(pickThree());
+}
+
+/* ── カテゴリアイコン ── */
+const CAT_ICONS = {
+  '食べ物・飲み物' : '🍜',
+  '生物・植物'     : '🐱',
+  '音楽'           : '🎵',
+  '映画・動画'     : '🎬',
+  '漫画・アニメ'   : '📖',
+  '場所・旅行'     : '🗺️',
+  'スポーツ・運動' : '⚽',
+  '遊び・エンタメ' : '🎮',
+  'ライフスタイル' : '🌿',
+  '恋愛'           : '💕',
+  '想像・ユニーク' : '🌟',
+  '人間関係・性格' : '🤝',
+};
+
+/* ── 一覧から選ぶ ── */
+function openQList() { show('screen-qlist'); }
+
+function openCategory(cat) {
+  // タイトル・件数を更新
+  document.getElementById('qcat-title').textContent = cat;
+  const items = QUESTIONS.map((item, idx) => ({ ...item, idx })).filter(item => item.cat === cat);
+  document.getElementById('qcat-meta').textContent = `${items.length}問`;
+
+  // 質問リストを構築
+  document.getElementById('qcat-content').innerHTML = items.map(({ idx, q }) =>
+    `<div class="qlist-item" onclick="selectQuestion(${idx})">
+      <span>${q}</span>
+      <span class="qlist-chevron">›</span>
+    </div>`
+  ).join('');
+
+  show('screen-qcat');
+}
+
+function selectQuestion(idx) {
+  if (!usedIdx.includes(idx)) usedIdx.push(idx);
+  showQuestion(QUESTIONS[idx].q);
+  show('screen-game');
+}
+
+/* ── 次のラウンド ── */
+function nextRound() {
+  if (round >= 5) { show('screen-result'); return; }
+  round++;
+  updateDots();
+  resetQuestionBox();
+}
+
+/* ── カテゴリ一覧を構築 ── */
+function buildQList() {
+  // カテゴリ別に集計
+  const cats = {};
+  QUESTIONS.forEach((item, idx) => {
+    if (!cats[item.cat]) cats[item.cat] = [];
+    cats[item.cat].push(idx);
+  });
+
+  document.getElementById('cat-grid').innerHTML = Object.entries(cats).map(([cat, idxs]) =>
+    `<div class="cat-card" onclick="openCategory('${cat}')">
+      <div class="cat-emoji">${CAT_ICONS[cat] || '📋'}</div>
+      <div class="cat-name">${cat}</div>
+      <div class="cat-count">${idxs.length}問</div>
+    </div>`
+  ).join('');
+
+  document.getElementById('qlist-total').textContent = `全${QUESTIONS.length}問`;
+}
+
+/* ── フローティングハート ── */
+(function() {
+  const hearts = ['💕','💗','💖','♥','💝','✨'];
+  const c = document.getElementById('fhearts');
+  for (let i = 0; i < 18; i++) {
+    const h = document.createElement('span');
+    h.className = 'fheart';
+    h.textContent = hearts[i % hearts.length];
+    h.style.cssText = `left:${Math.random()*100}%;font-size:${10+Math.random()*18}px;animation-duration:${7+Math.random()*9}s;animation-delay:${Math.random()*10}s;`;
+    c.appendChild(h);
+  }
+})();
+
+/* ── 初期化 ── */
+buildQList();
+</script>
+</body>
+</html>
