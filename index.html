@@ -104,26 +104,15 @@
       100%{ transform:translateY(-80px) rotate(15deg); opacity:0; }
     }
 
-    /* キューピッド2体コンテナ */
+    /* キューピッド1体コンテナ */
     .top-cupids {
       display:flex; align-items:center; justify-content:center;
       width:100%; max-width:360px;
       margin-bottom:0px; position:relative; z-index:2;
     }
     .top-cupid {
-      width:48%;
-      margin: 0 2%;
+      width:54%;
       animation:floatGently 4s ease-in-out infinite;
-    }
-    /* 右キューピッド：ラッパーで常にflip固定、imgでfloatアニメ */
-    .top-cupid-flip-wrap {
-      width:48%; margin: 0 2%;
-      transform: scaleX(-1);
-      flex-shrink: 0;
-    }
-    .top-cupid-flip-wrap .top-cupid {
-      width: 100%;
-      animation-delay: 0.7s;
     }
     @keyframes floatGently {
       0%,100%{ transform:translateY(0); }
@@ -352,10 +341,9 @@
 <div class="screen active" id="screen-top">
   <div class="floating-hearts" id="fhearts"></div>
 
-  <!-- キューピッド2体（向かい合わせ） -->
+  <!-- キューピッド1体（センター） -->
   <div class="top-cupids">
-    <img class="top-cupid" src="cupid1-white.png" alt="キューピッド">
-    <img class="top-cupid" src="cupid2-white.png" alt="キューピッド" style="margin:0 2%; animation-delay:0.7s;">
+    <img class="top-cupid" src="cupid2-white.png" alt="キューピッド">
   </div>
 
   <img class="top-title" src="title-white.png" alt="好キーホルダー">
